@@ -29,8 +29,8 @@ func check(e error) {
 	}
 }
 
-// default template prints docker login command
-const DEFAULT_TEMPLATE = `{{range .}}docker login -u {{.User}} -p {{.Pass}} -e none {{.ProxyEndpoint}}
+// DefaultTemplate prints docker login command
+const DefaultTemplate = `{{range .}}docker login -u {{.User}} -p {{.Pass}} -e none {{.ProxyEndpoint}}
 {{end}}`
 
 // load template from file or use default
@@ -43,7 +43,7 @@ func getTemplate() *template.Template {
 	if exists {
 		tmpl, err = template.ParseFiles(file)
 	} else {
-		tmpl, err = template.New("default").Parse(DEFAULT_TEMPLATE)
+		tmpl, err = template.New("default").Parse(DefaultTemplate)
 	}
 
 	check(err)
