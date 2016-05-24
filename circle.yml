@@ -1,0 +1,11 @@
+machine:
+  services:
+    - docker
+dependencies:
+  override:
+    - docker info
+    - make build
+    - make container
+test:
+  override:
+    - docker images
