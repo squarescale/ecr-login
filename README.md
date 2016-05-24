@@ -25,7 +25,7 @@ Login to your AWS Container Registry:
 ### Docker:
 
 ```
-$ docker run -it --rm -e AWS_REGION=us-east-1 -e AWS_ACCESS_KEY=ABCD -e AWS_SECRET_ACCESS_KEY=123 sjourdan/ecr-login
+$ eval `docker run --rm -e AWS_REGION=us-east-1 -e AWS_ACCESS_KEY=ABCD -e AWS_SECRET_ACCESS_KEY=123 sjourdan/ecr-login`
 ```
 
 ### Locally:
