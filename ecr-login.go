@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecr"
 )
 
+// Auth structure
 type Auth struct {
 	Token         string
 	User          string
