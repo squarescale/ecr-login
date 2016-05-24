@@ -1,1 +1,4 @@
-.goxc.local.json
+ecr-login
+bin/
+pkg/
+src/
