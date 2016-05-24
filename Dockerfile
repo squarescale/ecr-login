@@ -1,7 +1,7 @@
 FROM scratch
-MAINTAINER Ric Lister <rlister@gmail.com>
+MAINTAINER Stephane Jourdan <sjourdan@greenalto.com>
 
-ADD certs/ca-certificates.crt /etc/ssl/certs/
-ADD ecr-login /
+COPY certs/ca-certificates.crt /etc/ssl/certs/
+COPY ecr-login /
 
 CMD [ "/ecr-login" ]
