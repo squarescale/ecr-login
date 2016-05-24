@@ -1,6 +1,12 @@
-# ecr-login
+# ecr-login: AWS Container Registry auth container
 
-Login tool for AWS Container Registry.
+[![Circle CI](https://circleci.com/gh/sjourdan/ecr-login.svg?style=shield)](https://circleci.com/gh/sjourdan/ecr-login)
+
+Login tool for AWS Container Registry, forked from [rlister/ecr-login](https://github.com/rlister/ecr-login).
+
+Final objective: get a valid AWS ECR login from CoreOS or similar machines from a systemd unit dependency, now available as a container [sjourdan/ecr-login](https://hub.docker.com/r/sjourdan/ecr-login/
+)
+
 
 This is a lightweight golang version of the AWS command-line utility
 `aws ecr get-login`, designed to build into a small scratch docker
@@ -15,6 +21,14 @@ See build or docker image below.
 ## Usage
 
 Login to your AWS Container Registry:
+
+### Docker:
+
+```
+$ docker run -it --rm -e AWS_REGION=us-east-1 -e AWS_ACCESS_KEY=ABCD -e AWS_SECRET_ACCESS_KEY=123 sjourdan/ecr-login
+```
+
+### Locally:
 
 ```
 $ eval $(./ecr-login)
@@ -49,7 +63,7 @@ Description=Example
 
 [Service]
 User=core
-ExecStartPre=/bin/bash -c 'eval $(docker run rlister/ecr-login:latest)'
+ExecStartPre=/bin/bash -c 'eval $(docker run --rm -e AWS_REGION=us-east-1 -e AWS_ACCESS_KEY=ABCD -e AWS_SECRET_ACCESS_KEY=123 sjourdan/ecr-login:latest)'
 ExecStartPre=-/usr/bin/docker rm example
 ExecStartPre=/usr/bin/docker pull 1234567890.dkr.ecr.us-east-1.amazonaws.com/example:latest
 ExecStart=/usr/bin/docker run --name example 1234567890.dkr.ecr.us-east-1.amazonaws.com/example:latest
@@ -76,34 +90,8 @@ actually pull images from your registry). The easiest method is to add
 the AWS managed policy
 [AmazonEC2ContainerRegistryReadOnly](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecr_managed_policies.html).
 
-### Dependencies
-
-Dependencies are vendored using
-[godep](https://github.com/tools/godep). Install `godep` with:
-
-```
-go get github.com/tools/godep
-```
-
-then install or update any deps locally with:
-
-```
-go get -u github.com/foo/bar
-godep save -r
-```
-
 ## Build from source
 
 ```
-go build ./ecr-login.go
-```
-
-## Docker image
-
-```
-version=0.0.1
-CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo ecr-login.go
-docker build -t rlister/ecr-login:${version} .
-docker tag -f rlister/ecr-login:${version} rlister/ecr-login:latest
-docker push rlister/ecr-login
+$ make build
 ```
