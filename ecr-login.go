@@ -2,7 +2,10 @@ package main
 
 import (
 	"encoding/base64"
+	"flag"
+	"log"
 	"os"
+	"os/exec"
 	"strings"
 	"text/template"
 	"time"
@@ -25,7 +28,7 @@ type Auth struct {
 // error handler
 func check(e error) {
 	if e != nil {
-		panic(e.Error())
+		log.Panic(e)
 	}
 }
 
@@ -73,7 +76,7 @@ func getRegistryIds() []*string {
 	return registryIds
 }
 
-func main() {
+func login() ([]Auth, error) {
 	// configure aws client
 	sess := session.New()
 	svc := ecr.New(sess, aws.NewConfig().WithRegion(getRegion(sess)))
@@ -85,7 +88,9 @@ func main() {
 
 	// request the token
 	resp, err := svc.GetAuthorizationToken(params)
-	check(err)
+	if err != nil {
+		return nil, err
+	}
 
 	// fields to send to template
 	fields := make([]Auth, len(resp.AuthorizationData))
@@ -93,7 +98,9 @@ func main() {
 
 		// extract base64 token
 		data, err := base64.StdEncoding.DecodeString(*auth.AuthorizationToken)
-		check(err)
+		if err != nil {
+			return nil, err
+		}
 
 		// extract username and password
 		token := strings.SplitN(string(data), ":", 2)
@@ -108,7 +115,39 @@ func main() {
 		}
 	}
 
-	// run the template
-	err = getTemplate().Execute(os.Stdout, fields)
-	check(err)
+	return fields, nil
+}
+
+func main() {
+	var renew bool
+	flag.BoolVar(&renew, "renew", false, "Stay in foreground to renew credentials. You need to share /var/run/docker.sock and /usr/bin/docker")
+	flag.Parse()
+
+	if renew {
+		for {
+			log.Println("Renew AWS crendentials...")
+			fields, err := login()
+			check(err)
+			expires := fields[0].ExpiresAt
+			for i, cred := range fields {
+				log.Printf("[%d/%d] Got credentials expiring at %v", i+1, len(fields), cred.ExpiresAt.String())
+				cmd := exec.Command("/usr/bin/docker", "login", "-u", cred.User, "-p", cred.Pass, "-e", "none", cred.ProxyEndpoint)
+				err = cmd.Run()
+				check(err)
+				if cred.ExpiresAt.Before(expires) {
+					expires = cred.ExpiresAt
+				}
+			}
+			expires = expires.Add(-time.Hour)
+			log.Printf("Schedule next login for %v", expires.String())
+			time.Sleep(expires.Sub(time.Now()))
+		}
+	} else {
+		fields, err := login()
+		check(err)
+
+		// run the template
+		err = getTemplate().Execute(os.Stdout, fields)
+		check(err)
+	}
 }
