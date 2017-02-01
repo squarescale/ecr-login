@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ecr"
+	"github.com/coreos/go-systemd/daemon"
 )
 
 // Auth structure
@@ -137,6 +138,10 @@ func main() {
 				if cred.ExpiresAt.Before(expires) {
 					expires = cred.ExpiresAt
 				}
+			}
+			_, err = daemon.SdNotify(true, "READY=1")
+			if err != nil {
+				log.Printf("sd_notify(READY=1): %v", err)
 			}
 			expires = expires.Add(-time.Hour)
 			log.Printf("Schedule next login for %v", expires.String())
