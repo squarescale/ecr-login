@@ -132,7 +132,9 @@ func main() {
 			expires := fields[0].ExpiresAt
 			for i, cred := range fields {
 				log.Printf("[%d/%d] Got credentials expiring at %v", i+1, len(fields), cred.ExpiresAt.String())
-				cmd := exec.Command("/usr/bin/docker", "login", "-u", cred.User, "-p", cred.Pass, "-e", "none", cred.ProxyEndpoint)
+				cmd := exec.Command("/usr/bin/docker", "login", "-u", cred.User, "-p", cred.Pass, cred.ProxyEndpoint)
+				cmd.Stdout = os.Stdout
+				cmd.Stderr = os.Stderr
 				err = cmd.Run()
 				check(err)
 				if cred.ExpiresAt.Before(expires) {
